@@ -293,21 +293,26 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
   last_probe_monotonic_time_ns_ = monotonic();
 
   auto const handle_exception = [&] (TroubleshootItem item, std::exception const &e) {
-    log_.error("BPFHandler threw exception when initializing BPF or loading probes, closing connection: {}", e.what());
+    log_.error("Exception during BPFHandler initialization, closing connection: {}", e.what());
     print_troubleshooting_message_and_exit(host_info_, item, e, log_, upstream_connection_flush_and_close);
   };
 
+  auto potential_troubleshoot_item = TroubleshootItem::bpf_compilation_failed;
   try {
     bpf_handler_.emplace(loop_, full_program_, enable_http_metrics_, enable_userland_tcp_, bpf_dump_file_, log_, encoder_.get());
+
+    potential_troubleshoot_item = TroubleshootItem::unexpected_exception;
     writer_.bpf_compiled();
 
     bpf_handler_->load_buffered_poller(upstream_connection_.buffered_writer(),
                                        boot_time_adjustment_, curl_engine_, nic_poller_,
                                        cgroup_settings_, cpu_mem_io_settings_);
 
+    potential_troubleshoot_item = TroubleshootItem::bpf_load_probes_failed;
     bpf_handler_->load_probes(writer_);
 
     /* Start running buf_poller in steady-state */
+    potential_troubleshoot_item = TroubleshootItem::unexpected_exception;
     writer_.begin_telemetry();
     writer_.collector_health(integer_value(::collector::CollectorStatus::healthy), 0);
     LOG::info("Agent connected successfully. Telemetry is flowing!");
@@ -319,10 +324,10 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
       handle_exception(TroubleshootItem::operation_not_permitted, e);
       return;
     }
-    handle_exception(TroubleshootItem::bpf_compilation_failed, e);
+    handle_exception(potential_troubleshoot_item, e);
     return;
   } catch (std::exception &e) {
-    handle_exception(TroubleshootItem::bpf_compilation_failed, e);
+    handle_exception(potential_troubleshoot_item, e);
     return;
   }
 }

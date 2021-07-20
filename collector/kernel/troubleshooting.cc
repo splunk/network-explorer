@@ -199,6 +199,18 @@ the problem.
       break;
     }
 
+  case TroubleshootItem::bpf_load_probes_failed: {
+      std::cout << fmt::format(R"TROUBLESHOOTING(
+Failed to load eBPF probes for the Linux distro '{}' running kernel version {}.
+
+{}
+
+Please reach out to Flowmill and include this log in its entirety so we can diagnose and fix
+the problem.
+)TROUBLESHOOTING", static_cast<LinuxDistro>(info.os_flavor), info.kernel_version, item_fmt);
+      break;
+    }
+
     case TroubleshootItem::operation_not_permitted: {
       exit_sleep_sec = EXIT_SLEEP_FOREVER;
       std::cout << fmt::format(R"TROUBLESHOOTING(
