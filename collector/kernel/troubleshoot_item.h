@@ -20,8 +20,10 @@
 
 #define ENUM_NAME TroubleshootItem
 #define ENUM_TYPE std::uint8_t
-#define ENUM_ELEMENTS(X)                                                       \
-  X(none, 0)                                                                   \
-  X(bpf_compilation_failed, 1)
+#define ENUM_ELEMENTS(X)                                                \
+  X(none, 0)                                                            \
+  X(bpf_compilation_failed, 1)                                          \
+  X(operation_not_permitted, 2)                                         \
+  X(unexpected_exception, 3)
 #define ENUM_DEFAULT none
 #include <util/enum_operators.inl>
