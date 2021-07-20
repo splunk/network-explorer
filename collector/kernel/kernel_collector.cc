@@ -292,7 +292,7 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
 
   last_probe_monotonic_time_ns_ = monotonic();
 
-  auto const handle_exception = [&, this] (TroubleshootItem item, std::exception const &e) {
+  auto const handle_exception = [&] (TroubleshootItem item, std::exception const &e) {
     log_.error("BPFHandler threw exception when initializing BPF or loading probes, closing connection: {}", e.what());
     print_troubleshooting_message_and_exit(host_info_, item, e, log_, upstream_connection_flush_and_close);
   };

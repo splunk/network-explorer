@@ -565,7 +565,7 @@ int main(int argc, char *argv[]) {
   }
 
   HostInfo host_info{
-    .os = OperatingSystem::Linux,
+      .os = OperatingSystem::Linux,
       .os_flavor = integer_value(*host_distro),
       .os_version = gcp_metadata ? gcp_metadata->image() : "unknown",
       .kernel_headers_source = *kernel_headers_source,
@@ -645,21 +645,25 @@ int main(int argc, char *argv[]) {
 
     // Initialize our kernel telemetry collector
     KernelCollector kernel_collector{
-      bpf_src, intake_config, boot_time_adjustment,
-        aws_metadata.try_value(), gcp_metadata.try_value(),
-        configuration_data.labels(), loop, *curl_engine,
+        bpf_src,
+        intake_config,
+        boot_time_adjustment,
+        aws_metadata.try_value(),
+        gcp_metadata.try_value(),
+        configuration_data.labels(),
+        loop,
+        *curl_engine,
         authz_fetcher,
         enable_http_metrics,
         enable_userland_tcp,
         CgroupHandler::CgroupSettings{
-        .force_docker_metadata = *force_docker_metadata,
-          .dump_docker_metadata = *dump_docker_metadata,
-          },
+            .force_docker_metadata = *force_docker_metadata,
+            .dump_docker_metadata = *dump_docker_metadata,
+        },
         nullptr,
-          bpf_dump_file.Get(),
-          host_info,
-          *entrypoint_error
-                 };
+        bpf_dump_file.Get(),
+        host_info,
+        *entrypoint_error};
 
     authz_fetcher.auto_refresh(
       loop,
