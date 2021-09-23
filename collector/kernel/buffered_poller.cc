@@ -18,6 +18,7 @@
 #include <collector/kernel/bpf_src/render_bpf.h>
 #include <collector/kernel/buffered_poller.h>
 #include <collector/kernel/dns/dns.h>
+#include <collector/kernel/kernel_collector_restarter.h>
 #include <collector/kernel/perf_reader.h>
 #include <collector/kernel/proc_cmdline.h>
 #include <common/client_server_type.h>
@@ -61,7 +62,8 @@ BufferedPoller::BufferedPoller(
     NicPoller &nic_poller,
     CgroupHandler::CgroupSettings const &cgroup_settings,
     ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
-    ::flowmill::ingest::Encoder *encoder)
+    ::flowmill::ingest::Encoder *encoder,
+    const std::shared_ptr<KernelCollectorRestarter> &kernel_collector_restarter)
     : PerfPoller(container),
       loop_(loop),
       time_adjustment_(time_adjustment),
@@ -81,7 +83,8 @@ BufferedPoller::BufferedPoller(
       tcp_socket_stats_(tslot_),
       udp_socket_table_ever_full_(false),
       udp_socket_stats_{{{tslot_}, {tslot_}}},
-      all_probes_loaded_(false)
+      all_probes_loaded_(false),
+      kernel_collector_restarter_(kernel_collector_restarter)
 {
   if (buffered_writer_.buf_size() < MAX_ENCODED_DNS_MESSAGE) {
     throw std::runtime_error("BufferedPoller: buf size too small for DNS");
@@ -159,7 +162,14 @@ void BufferedPoller::process_samples(bool is_event)
 
   // read the top contents of our container into our buffer
   while (!reader.empty()) {
-    if (reader.peek_type() == PERF_RECORD_SAMPLE) {
+    auto peek_type = reader.peek_type();
+
+    auto debug_bpf_lost_samples_tmp = debug_bpf_lost_samples_.load(std::memory_order_relaxed);
+    if (debug_bpf_lost_samples_tmp) {
+      peek_type = PERF_RECORD_LOST;
+    }
+
+    if (peek_type == PERF_RECORD_SAMPLE) {
       if (bpf_dump_file_) {
         auto const view = reader.peek_message();
         bpf_dump_file_.write_all(view.first);
@@ -183,9 +193,21 @@ void BufferedPoller::process_samples(bool is_event)
 
       /* unknown message -- this is a bug */
       throw std::runtime_error("unexpected bpf message\n");
-    } else if (reader.peek_type() == PERF_RECORD_LOST) {
-      lost_count_ += reader.peek_n_lost();
-      reader.pop();
+    } else if (peek_type == PERF_RECORD_LOST) {
+      if (debug_bpf_lost_samples_tmp) {
+        debug_bpf_lost_samples_ = false;
+        lost_count_ += 1;
+      } else {
+        lost_count_ += reader.peek_n_lost();
+        reader.pop();
+      }
+
+      send_report_if_recent_loss();
+
+      log_.warn("Lost {} bpf samples - restarting kernel_collector.", lost_count_);
+      kernel_collector_restarter_->request_restart();
+
+      return;
     } else {
       throw std::runtime_error("Unexpected record type\n");
     }
@@ -1324,4 +1346,9 @@ void BufferedPoller::handle_nic_queue_state(message_metadata const &metadata, jb
 void BufferedPoller::set_all_probes_loaded()
 {
   all_probes_loaded_ = true;
+}
+
+void BufferedPoller::debug_bpf_lost_samples()
+{
+  debug_bpf_lost_samples_ = true;
 }

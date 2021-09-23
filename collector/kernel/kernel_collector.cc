@@ -15,6 +15,7 @@
 //
 
 #include <collector/kernel/kernel_collector.h>
+#include <collector/kernel/kernel_collector_restarter.h>
 
 #include <channel/tcp_channel.h>
 #include <collector/component.h>
@@ -313,13 +314,15 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
     potential_troubleshoot_item = TroubleshootItem::unexpected_exception;
     writer_.bpf_compiled();
 
+    kernel_collector_restarter_ = std::make_shared<KernelCollectorRestarter>(*this);
     bpf_handler_->load_buffered_poller(
         upstream_connection_.buffered_writer(),
         boot_time_adjustment_,
         curl_engine_,
         nic_poller_,
         cgroup_settings_,
-        cpu_mem_io_settings_);
+        cpu_mem_io_settings_,
+        kernel_collector_restarter_);
 
     potential_troubleshoot_item = TroubleshootItem::bpf_load_probes_failed;
     bpf_handler_->load_probes(writer_);
@@ -330,6 +333,8 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
     writer_.collector_health(integer_value(::collector::CollectorStatus::healthy), 0);
     LOG::info("Agent connected successfully. Telemetry is flowing!");
     is_connected_ = true;
+
+    kernel_collector_restarter_->startup_completed();
 
     enter_polling_state();
   } catch (std::system_error &e) {
@@ -545,6 +550,18 @@ void KernelCollector::on_error(int error)
   stop_all_timers();
 }
 
+void KernelCollector::restart()
+{
+  /* we don't want attempts to perform IO on the channel */
+  heartbeat_sender_.stop();
+
+  // flush the channel so previously sent messages make it to the pipeline server
+  upstream_connection_.flush();
+
+  // close the channel, it will trigger reconnect via KernelCollector::Callbacks::on_closed() which calls enter_try_connecting()
+  upstream_connection_.close();
+}
+
 void KernelCollector::cleanup_pointers()
 {
   bpf_handler_.reset();
@@ -660,6 +677,10 @@ void KernelCollector::enter_try_connecting(std::chrono::milliseconds discount)
     timeout += std::chrono::milliseconds{d(rd)};
   }
 
+  if (kernel_collector_restarter_ && kernel_collector_restarter_->restart_in_progress_) {
+    timeout = 0ms;
+  }
+
   LOG::trace(
       "KernelCollector: entering TRY_CONNECTING state. Next "
       "reconnection attempt in {}",
@@ -727,4 +748,9 @@ std::chrono::milliseconds KernelCollector::update_authz_token(AuthzToken const &
       authz_token_->expiration() - std::chrono::system_clock::now().time_since_epoch());
   authz_token_ = token;
   return time_left;
+}
+
+void KernelCollector::debug_bpf_lost_samples()
+{
+  bpf_handler_->debug_bpf_lost_samples();
 }
