@@ -441,8 +441,9 @@ void CurlEngineImpl::stop_timer()
 void CurlEngineImpl::start_poll(curl_socket_t socket_fd, int events)
 {
   LOG::trace_in(Utility::curl, "start_poll(), events: {}", events);
-  uv_poll_t *poll_handle = new uv_poll_t;
-  int res = uv_poll_init(loop_, poll_handle, socket_fd);
+  std::unique_ptr<uv_poll_t> poll_handle(new uv_poll_t);
+
+  int res = uv_poll_init(loop_, poll_handle.get(), socket_fd);
   if (res != 0) {
     LOG::error("Cannot init poll handle. {}", uv_err_name(res));
     throw std::runtime_error("Cannot init poll handle.");
@@ -450,14 +451,14 @@ void CurlEngineImpl::start_poll(curl_socket_t socket_fd, int events)
   }
   poll_handle->data = this;
 
-  res = uv_poll_start(poll_handle, events, on_uv_poll);
+  res = uv_poll_start(poll_handle.get(), events, on_uv_poll);
   if (res != 0) {
     LOG::error("Cannot start poll. {}", uv_err_name(res));
     throw std::runtime_error("Cannot start poll.");
     return;
   }
 
-  auto mcode = curl_multi_assign(curl_handle_, socket_fd, poll_handle);
+  auto mcode = curl_multi_assign(curl_handle_, socket_fd, poll_handle.release());
   if (mcode != CURLM_OK) {
     LOG::error("Cannot add easy handle", curl_multi_strerror(mcode));
     throw std::runtime_error("Cannot add easy handle.");
