@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
     if (schedule_bpf_lost_samples.given() && *schedule_bpf_lost_samples > 0) {
       std::chrono::seconds const timeout(*schedule_bpf_lost_samples);
 
-      auto schedule_bpf_lost_samples = [&kernel_collector, &debug_bpf_lost_samples_timer, timeout]() {
+      auto schedule_bpf_lost_samples = [&debug_bpf_lost_samples_timer, timeout]() {
         if (auto const result = debug_bpf_lost_samples_timer->defer(timeout)) {
           LOG::info("successfully scheduled inject_bpf_lost_samples() {} from now", timeout);
         } else {
@@ -657,7 +657,7 @@ int main(int argc, char *argv[])
         }
       };
 
-      auto inject_bpf_lost_samples = [&kernel_collector, &schedule_bpf_lost_samples]() {
+      auto inject_bpf_lost_samples = [&kernel_collector, schedule_bpf_lost_samples]() {
         kernel_collector.debug_bpf_lost_samples();
         schedule_bpf_lost_samples();
       };
