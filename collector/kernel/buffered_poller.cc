@@ -164,10 +164,19 @@ void BufferedPoller::process_samples(bool is_event)
   while (!reader.empty()) {
     auto peek_type = reader.peek_type();
 
-    auto debug_bpf_lost_samples_tmp = debug_bpf_lost_samples_.load(std::memory_order_relaxed);
-    if (debug_bpf_lost_samples_tmp) {
-      peek_type = PERF_RECORD_LOST;
+    auto handle_bpf_lost_samples = [this]() {
+      send_report_if_recent_loss();
+      log_.warn("Lost {} bpf samples - restarting kernel collector.", lost_count_);
+      kernel_collector_restarter_->request_restart();
+    };
+
+#ifndef NDEBUG
+    if (debug_bpf_lost_samples_) {
+      lost_count_ += 1;
+      handle_bpf_lost_samples();
+      return;
     }
+#endif
 
     if (peek_type == PERF_RECORD_SAMPLE) {
       if (bpf_dump_file_) {
@@ -194,19 +203,10 @@ void BufferedPoller::process_samples(bool is_event)
       /* unknown message -- this is a bug */
       throw std::runtime_error("unexpected bpf message\n");
     } else if (peek_type == PERF_RECORD_LOST) {
-      if (debug_bpf_lost_samples_tmp) {
-        debug_bpf_lost_samples_ = false;
-        lost_count_ += 1;
-      } else {
-        lost_count_ += reader.peek_n_lost();
-        reader.pop();
-      }
+      lost_count_ += reader.peek_n_lost();
+      reader.pop();
 
-      send_report_if_recent_loss();
-
-      log_.warn("Lost {} bpf samples - restarting kernel_collector.", lost_count_);
-      kernel_collector_restarter_->request_restart();
-
+      handle_bpf_lost_samples();
       return;
     } else {
       throw std::runtime_error("Unexpected record type\n");
@@ -1348,7 +1348,9 @@ void BufferedPoller::set_all_probes_loaded()
   all_probes_loaded_ = true;
 }
 
+#ifndef NDEBUG
 void BufferedPoller::debug_bpf_lost_samples()
 {
   debug_bpf_lost_samples_ = true;
 }
+#endif

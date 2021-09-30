@@ -660,25 +660,25 @@ void KernelCollector::enter_try_connecting(std::chrono::milliseconds discount)
 
   stop_all_timers();
 
-  auto timeout = discount > TRY_CONNECTING_TIMEOUT ? 0ms : TRY_CONNECTING_TIMEOUT - discount;
-  u64 now = monotonic();
+  std::chrono::milliseconds timeout = 0s; // default to no hold-off timeout for self-restart
+  if (!kernel_collector_restarter_ || !kernel_collector_restarter_->restart_in_progress_) {
+    // for the normal case determine an appropriate hold-off timeout
+    timeout = discount > TRY_CONNECTING_TIMEOUT ? 0ms : TRY_CONNECTING_TIMEOUT - discount;
+    u64 now = monotonic();
 
-  if (now - last_probe_monotonic_time_ns_ < inter_probe_time_ns_) {
-    // need to bound using inter_probe_time_ns_
-    std::chrono::milliseconds const at_least{
-        (inter_probe_time_ns_ - (now - last_probe_monotonic_time_ns_)) / ((u64)1000 * 1000)};
-    timeout = std::max(timeout, at_least);
-  }
+    if (now - last_probe_monotonic_time_ns_ < inter_probe_time_ns_) {
+      // need to bound using inter_probe_time_ns_
+      std::chrono::milliseconds const at_least{
+          (inter_probe_time_ns_ - (now - last_probe_monotonic_time_ns_)) / ((u64)1000 * 1000)};
+      timeout = std::max(timeout, at_least);
+    }
 
-  // add jitter
-  {
-    std::random_device rd;
-    std::uniform_int_distribution<u64> d(0, integer_time<std::chrono::milliseconds>(MAX_JITTER_TIME));
-    timeout += std::chrono::milliseconds{d(rd)};
-  }
-
-  if (kernel_collector_restarter_ && kernel_collector_restarter_->restart_in_progress_) {
-    timeout = 0ms;
+    // add jitter
+    {
+      std::random_device rd;
+      std::uniform_int_distribution<u64> d(0, integer_time<std::chrono::milliseconds>(MAX_JITTER_TIME));
+      timeout += std::chrono::milliseconds{d(rd)};
+    }
   }
 
   LOG::trace(
@@ -750,7 +750,9 @@ std::chrono::milliseconds KernelCollector::update_authz_token(AuthzToken const &
   return time_left;
 }
 
+#ifndef NDEBUG
 void KernelCollector::debug_bpf_lost_samples()
 {
   bpf_handler_->debug_bpf_lost_samples();
 }
+#endif

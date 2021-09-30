@@ -105,8 +105,10 @@ public:
   /* returns the time left until expiration of the old token */
   std::chrono::milliseconds update_authz_token(AuthzToken const &token);
 
+#ifndef NDEBUG
   /* Debug code for internal development to simulate lost BPF samples (PERF_RECORD_LOST) in BufferedPoller. */
   void debug_bpf_lost_samples();
+#endif
 
 private:
   class Callbacks : public channel::Callbacks {

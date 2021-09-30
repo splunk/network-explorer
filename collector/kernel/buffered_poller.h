@@ -128,10 +128,12 @@ public:
    */
   void set_all_probes_loaded(void);
 
+#ifndef NDEBUG
   /**
    * Debug code for internal development to simulate lost BPF samples (PERF_RECORD_LOST) in BufferedPoller.
    */
   void debug_bpf_lost_samples();
+#endif
 
 private:
   /**
@@ -380,5 +382,7 @@ private:
 
   std::shared_ptr<KernelCollectorRestarter> kernel_collector_restarter_;
 
-  std::atomic<bool> debug_bpf_lost_samples_ = false;
+#ifndef NDEBUG
+  bool debug_bpf_lost_samples_ = false;
+#endif
 };

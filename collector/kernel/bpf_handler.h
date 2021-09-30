@@ -88,10 +88,12 @@ public:
    */
   void check_cb(std::string error_loc);
 
+#ifndef NDEBUG
   /**
    * Debug code for internal development to simulate lost BPF samples (PERF_RECORD_LOST) in BufferedPoller.
    */
   void debug_bpf_lost_samples();
+#endif
 
 private:
   uv_loop_t &loop_;
