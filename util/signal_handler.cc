@@ -155,8 +155,9 @@ SignalManager::SignalManager(cli::ArgsParser &parser, ::uv_loop_t &loop, std::st
       disable_crash_report_(parser.add_flag("disable-crash-report", "disables minidump / crash reporter")),
       minidump_dir_{try_get_env_var(FLOWMILL_MINIDUMP_DIR_VAR, FLOWMILL_MINIDUMP_DIR)},
       minidump_path_(parser.add_arg<std::string>(COLLECT_MINIDUMP_FLAG, "internal crash reporting")),
-      breakpad_descriptor_(minidump_dir_),
+      breakpad_descriptor_(minidump_dir_)
 #ifndef NDEBUG
+      ,
       crash_(parser.add_flag("crash", "internal development - force a SIGSEGV")),
       schedule_crash_(parser.add_arg<std::chrono::seconds::rep>(
           "schedule-crash", "internal development - will force a SIGSEGV after given number of seconds"))
