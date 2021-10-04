@@ -60,7 +60,7 @@ public:
       NicPoller &nic_poller,
       CgroupHandler::CgroupSettings const &cgroup_settings,
       ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
-      const std::shared_ptr<KernelCollectorRestarter> &kernel_collector_restarter);
+      KernelCollectorRestarter &kernel_collector_restarter);
 
   /**
    * Loads BPF probes. Takes writer to send out steady_state msgs

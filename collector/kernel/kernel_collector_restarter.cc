@@ -17,9 +17,10 @@
 #include <collector/kernel/kernel_collector.h>
 #include <collector/kernel/kernel_collector_restarter.h>
 
-KernelCollectorRestarter::KernelCollectorRestarter(KernelCollector &collector)
-    : startup_completed_(false), restart_requested_(false), restart_in_progress_(false), collector_(collector)
-{}
+KernelCollectorRestarter::KernelCollectorRestarter(KernelCollector &collector) : collector_(collector)
+{
+  reset();
+}
 
 void KernelCollectorRestarter::check_restart()
 {
@@ -46,4 +47,11 @@ void KernelCollectorRestarter::request_restart()
   LOG::debug("KernelCollectorRestarter: restart requested");
   restart_requested_ = true;
   check_restart();
+}
+
+void KernelCollectorRestarter::reset()
+{
+  startup_completed_ = false;
+  restart_requested_ = false;
+  restart_in_progress_ = false;
 }

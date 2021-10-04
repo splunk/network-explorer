@@ -140,7 +140,8 @@ KernelCollector::KernelCollector(
       cgroup_settings_(std::move(cgroup_settings)),
       cpu_mem_io_settings_(cpu_mem_io_settings),
       log_(writer_),
-      nic_poller_(writer_, log_)
+      nic_poller_(writer_, log_),
+      kernel_collector_restarter_(*this)
 {
   if (intake_config_.auth_method() == collector::AuthMethod::authz) {
     assert(authz_fetcher_);
@@ -314,7 +315,7 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
     potential_troubleshoot_item = TroubleshootItem::unexpected_exception;
     writer_.bpf_compiled();
 
-    kernel_collector_restarter_ = std::make_shared<KernelCollectorRestarter>(*this);
+    kernel_collector_restarter_.reset();
     bpf_handler_->load_buffered_poller(
         upstream_connection_.buffered_writer(),
         boot_time_adjustment_,
@@ -334,7 +335,7 @@ void KernelCollector::probe_holdoff_timeout(uv_timer_t *timer)
     LOG::info("Agent connected successfully. Telemetry is flowing!");
     is_connected_ = true;
 
-    kernel_collector_restarter_->startup_completed();
+    kernel_collector_restarter_.startup_completed();
 
     enter_polling_state();
   } catch (std::system_error &e) {
@@ -661,7 +662,7 @@ void KernelCollector::enter_try_connecting(std::chrono::milliseconds discount)
   stop_all_timers();
 
   std::chrono::milliseconds timeout = 0s; // default to no hold-off timeout for self-restart
-  if (!kernel_collector_restarter_ || !kernel_collector_restarter_->restart_in_progress_) {
+  if (!kernel_collector_restarter_.restart_in_progress_) {
     // for the normal case determine an appropriate hold-off timeout
     timeout = discount > TRY_CONNECTING_TIMEOUT ? 0ms : TRY_CONNECTING_TIMEOUT - discount;
     u64 now = monotonic();

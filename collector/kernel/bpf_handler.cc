@@ -23,8 +23,6 @@
 #include <collector/kernel/process_prober.h>
 #include <collector/kernel/socket_prober.h>
 
-#include <collector/kernel/kernel_collector_restarter.h>
-
 BPFHandler::BPFHandler(
     uv_loop_t &loop,
     std::string full_program,
@@ -66,7 +64,7 @@ void BPFHandler::load_buffered_poller(
     NicPoller &nic_poller,
     CgroupHandler::CgroupSettings const &cgroup_settings,
     ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
-    const std::shared_ptr<KernelCollectorRestarter> &kernel_collector_restarter)
+    KernelCollectorRestarter &kernel_collector_restarter)
 {
   LOG::trace("--- Starting BufferedPoller ---");
   buf_poller_ = std::make_unique<BufferedPoller>(

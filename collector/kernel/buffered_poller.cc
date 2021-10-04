@@ -63,7 +63,7 @@ BufferedPoller::BufferedPoller(
     CgroupHandler::CgroupSettings const &cgroup_settings,
     ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
     ::flowmill::ingest::Encoder *encoder,
-    const std::shared_ptr<KernelCollectorRestarter> &kernel_collector_restarter)
+    KernelCollectorRestarter &kernel_collector_restarter)
     : PerfPoller(container),
       loop_(loop),
       time_adjustment_(time_adjustment),
@@ -167,7 +167,7 @@ void BufferedPoller::process_samples(bool is_event)
     auto handle_bpf_lost_samples = [this]() {
       send_report_if_recent_loss();
       log_.warn("Lost {} bpf samples - restarting kernel collector.", lost_count_);
-      kernel_collector_restarter_->request_restart();
+      kernel_collector_restarter_.request_restart();
     };
 
 #ifndef NDEBUG

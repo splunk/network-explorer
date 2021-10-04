@@ -34,6 +34,7 @@ public:
   KernelCollectorRestarter(KernelCollector &collector);
   void startup_completed();
   void request_restart();
+  void reset();
 
 private:
   void check_restart();

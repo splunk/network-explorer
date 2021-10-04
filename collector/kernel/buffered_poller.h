@@ -81,7 +81,7 @@ public:
       CgroupHandler::CgroupSettings const &cgroup_settings,
       ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
       ::flowmill::ingest::Encoder *encoder,
-      const std::shared_ptr<KernelCollectorRestarter> &kernel_collector_restarter);
+      KernelCollectorRestarter &kernel_collector_restarter);
 
   /**
    * batches as many entries into buffer as possible before calling
@@ -380,7 +380,7 @@ private:
 
   bool all_probes_loaded_;
 
-  std::shared_ptr<KernelCollectorRestarter> kernel_collector_restarter_;
+  KernelCollectorRestarter &kernel_collector_restarter_;
 
 #ifndef NDEBUG
   bool debug_bpf_lost_samples_ = false;
