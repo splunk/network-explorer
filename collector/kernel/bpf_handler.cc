@@ -326,6 +326,8 @@ void BPFHandler::check_cb(std::string error_loc)
 #ifndef NDEBUG
 void BPFHandler::debug_bpf_lost_samples()
 {
-  buf_poller_->debug_bpf_lost_samples();
+  if (buf_poller_) {
+    buf_poller_->debug_bpf_lost_samples();
+  }
 }
 #endif

@@ -750,6 +750,8 @@ std::chrono::milliseconds KernelCollector::update_authz_token(AuthzToken const &
 #ifndef NDEBUG
 void KernelCollector::debug_bpf_lost_samples()
 {
-  bpf_handler_->debug_bpf_lost_samples();
+  if (bpf_handler_) {
+    bpf_handler_->debug_bpf_lost_samples();
+  }
 }
 #endif
