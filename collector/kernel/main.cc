@@ -74,6 +74,7 @@ static constexpr auto FLOWMILL_EXPORT_BPF_SRC_FILE_VAR = "FLOWMILL_EXPORT_BPF_SR
 
 static constexpr auto FLOWMILL_AUTH_METHOD_VAR = "FLOWMILL_INTAKE_AUTH_METHOD";
 static constexpr auto FLOWMILL_DISABLE_HTTP_METRICS_VAR = "FLOWMILL_DISABLE_HTTP_METRICS";
+static constexpr auto FLOWMILL_SOCKET_STATS_INTERVAL_SEC_VAR = "FLOWMILL_SOCKET_STATS_INTERVAL_SEC";
 
 static constexpr auto FLOWMILL_LABEL_CLUSTER_DEPRECATED_VAR = "FLOWMILL_AGENT_LABELS_ENVIRONMENT";
 static constexpr auto FLOWMILL_LABEL_SERVICE_DEPRECATED_VAR = "FLOWMILL_AGENT_LABELS_SERVICE";
@@ -277,6 +278,12 @@ int main(int argc, char *argv[])
   cli::ArgsParser parser("Flowmill agent.");
   args::HelpFlag help(*parser, "help", "Display this help menu", {'h', "help"});
   args::ValueFlag<u64> filter_ns(*parser, "nanoseconds", "Gap between subsequent reports", {"filter-ns"}, 10 * 1000 * 1000ull);
+  auto socket_stats_interval_sec = parser.add_arg<double>(
+      "socket-stats-interval-sec",
+      "Interval between sending socket stats (floating point)",
+      FLOWMILL_SOCKET_STATS_INTERVAL_SEC_VAR,
+      10.0);
+
   args::ValueFlag<u64> metadata_timeout_us(
       *parser,
       "microseconds",
@@ -436,6 +443,8 @@ int main(int argc, char *argv[])
   bool const enable_http_metrics = !disable_http_metrics;
   static constexpr char const *enabled_disabled[] = {"Disabled", "Enabled"};
   LOG::info("HTTP Metrics: {}", enabled_disabled[enable_http_metrics]);
+
+  LOG::info("Socket stats interval in seconds: {:.3f}", *socket_stats_interval_sec);
 
   /* acknowledge userland tcp */
   bool const enable_userland_tcp = enable_userland_tcp_flag.Matched();
@@ -630,6 +639,7 @@ int main(int argc, char *argv[])
         authz_fetcher,
         enable_http_metrics,
         enable_userland_tcp,
+        *socket_stats_interval_sec,
         CgroupHandler::CgroupSettings{
             .force_docker_metadata = *force_docker_metadata,
             .dump_docker_metadata = *dump_docker_metadata,
