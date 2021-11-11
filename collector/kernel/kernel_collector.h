@@ -59,7 +59,7 @@ public:
       std::optional<AuthzFetcher> &authz_fetcher,
       bool enable_http_metrics,
       bool enable_userland_tcp,
-      double socket_stats_interval_sec,
+      u64 socket_stats_interval_sec,
       CgroupHandler::CgroupSettings cgroup_settings,
       ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
       std::string const &bpf_dump_file,
@@ -215,7 +215,7 @@ private:
   /* enable/disable features */
   bool enable_http_metrics_;
   bool enable_userland_tcp_;
-  double socket_stats_interval_sec_;
+  u64 socket_stats_interval_sec_;
   CgroupHandler::CgroupSettings const cgroup_settings_;
   ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings_;
 

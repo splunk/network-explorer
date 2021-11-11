@@ -78,7 +78,7 @@ public:
       ProbeHandler &probe_handler,
       ebpf::BPFModule &bpf_module,
       NicPoller &nic_poller,
-      double socket_stats_interval_sec,
+      u64 socket_stats_interval_sec,
       CgroupHandler::CgroupSettings const &cgroup_settings,
       ProcessHandler::CpuMemIoSettings const *cpu_mem_io_settings,
       ::flowmill::ingest::Encoder *encoder,
