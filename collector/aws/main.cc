@@ -42,7 +42,7 @@
  * environment:
  * https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
  *
- * In production, in an EC2 instance, this should work automagically.
+ * In production, in an EC2 instance, this should work automatically.
  *
  * The easiest way to achieve that in a development environment is by setting up
  * environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
       "How often, in milliseconds, to enumerate interfaces in EC2.",
       {"ec2-poll-interval-ms"},
       std::chrono::milliseconds(1s).count());
+
+  auto aws_collector_on_o11y_clustter = parser.add_flag(
+      "aws_collector_on_o11y_cluster", "AWS collector running on an o11y cluster", false);    
 
   auto &authz_server = AuthzFetcher::register_args_parser(parser);
 
@@ -121,10 +124,14 @@ int main(int argc, char *argv[])
   LOG::info("AWS Collector version {} ({}) started on host {}", versions::release, release_mode_string, hostname);
   LOG::info("AWS Collector agent ID is {}", agent_id);
 
+   SDKOptions options;
   // aws sdk init
-
-  Aws::InitAPI({});
-
+  if aws_collector_on_o11y_cluster{
+    options.
+    Aws::InitAPI(options);
+  }else {
+    Aws::InitAPI({});
+  }
   // main
 
   collector::aws::AwsCollector collector{
@@ -143,7 +150,12 @@ int main(int argc, char *argv[])
   collector.run_loop();
 
   // shutdown
-  Aws::ShutdownAPI({});
+  if aws_collector_on_o11y_cluster{
+    Aws::ShutdownAPI(options);
+  }else {
+    Aws::ShutdownAPI({});
+  }
+  
 
   return EXIT_SUCCESS;
 }
