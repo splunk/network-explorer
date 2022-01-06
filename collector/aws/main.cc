@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
       std::chrono::milliseconds(1s).count());
 
   auto aws_collector_on_o11y_clustter = parser.add_flag(
-      "aws_collector_on_o11y_cluster", "AWS collector running on an o11y cluster", false);    
+      "aws_collector_on_cluster", "AWS collector running on an o11y cluster", false);    
 
   auto &authz_server = AuthzFetcher::register_args_parser(parser);
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
    SDKOptions options;
   // aws sdk init
   if aws_collector_on_o11y_cluster{
-    options.
+    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
     Aws::InitAPI(options);
   }else {
     Aws::InitAPI({});
