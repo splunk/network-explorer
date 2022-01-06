@@ -77,9 +77,6 @@ int main(int argc, char *argv[])
       {"ec2-poll-interval-ms"},
       std::chrono::milliseconds(1s).count());
 
-  auto aws_collector_on_o11y_clustter = parser.add_flag(
-      "aws_collector_on_cluster", "AWS collector running on an o11y cluster", false);    
-
   auto &authz_server = AuthzFetcher::register_args_parser(parser);
 
   args::ValueFlag<u64> aws_metadata_timeout_ms(
@@ -124,14 +121,10 @@ int main(int argc, char *argv[])
   LOG::info("AWS Collector version {} ({}) started on host {}", versions::release, release_mode_string, hostname);
   LOG::info("AWS Collector agent ID is {}", agent_id);
 
-   SDKOptions options;
   // aws sdk init
-  if aws_collector_on_o11y_cluster{
-    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
-    Aws::InitAPI(options);
-  }else {
-    Aws::InitAPI({});
-  }
+  Aws::SDKOptions options;
+  options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
+  Aws::InitAPI(options);
   // main
 
   collector::aws::AwsCollector collector{
@@ -150,12 +143,7 @@ int main(int argc, char *argv[])
   collector.run_loop();
 
   // shutdown
-  if aws_collector_on_o11y_cluster{
-    Aws::ShutdownAPI(options);
-  }else {
-    Aws::ShutdownAPI({});
-  }
+  Aws::ShutdownAPI(options);
   
-
   return EXIT_SUCCESS;
 }
