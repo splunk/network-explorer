@@ -50,6 +50,9 @@
 
 int main(int argc, char *argv[])
 {
+  if(const char* env_aws_var = std::getenv("AWS_WEB_IDENTITY_TOKEN_FILE")){
+    LOG::debug("AWS_WEB_IDENTITY_TOKEN_FILE env var: {}", *env_aws_var);
+  }
   ::uv_loop_t loop;
   if (auto const error = ::uv_loop_init(&loop)) {
     throw std::runtime_error(::uv_strerror(error));
