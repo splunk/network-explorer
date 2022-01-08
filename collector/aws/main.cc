@@ -51,7 +51,7 @@
 int main(int argc, char *argv[])
 {
   if(const char* env_aws_var = std::getenv("AWS_WEB_IDENTITY_TOKEN_FILE")){
-    LOG::debug("AWS_WEB_IDENTITY_TOKEN_FILE env var: {}", *env_aws_var);
+    LOG::info("AWS_WEB_IDENTITY_TOKEN_FILE env var: {}", *env_aws_var);
   }
   ::uv_loop_t loop;
   if (auto const error = ::uv_loop_init(&loop)) {
@@ -129,22 +129,22 @@ int main(int argc, char *argv[])
   options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
   Aws::InitAPI(options);
   // main
+  {
+    collector::aws::AwsCollector collector{
+        loop,
+        hostname,
+        authz_fetcher,
+        std::chrono::milliseconds(aws_metadata_timeout_ms.Get()),
+        HEARTBEAT_INTERVAL,
+        WRITE_BUFFER_SIZE,
+        std::move(intake_config),
+        std::chrono::milliseconds(ec2_poll_interval_ms.Get())};
 
-  collector::aws::AwsCollector collector{
-      loop,
-      hostname,
-      authz_fetcher,
-      std::chrono::milliseconds(aws_metadata_timeout_ms.Get()),
-      HEARTBEAT_INTERVAL,
-      WRITE_BUFFER_SIZE,
-      std::move(intake_config),
-      std::chrono::milliseconds(ec2_poll_interval_ms.Get())};
+    signal_manager.handle_signals({SIGINT, SIGTERM} // TODO: close gracefully
+    );
 
-  signal_manager.handle_signals({SIGINT, SIGTERM} // TODO: close gracefully
-  );
-
-  collector.run_loop();
-
+    collector.run_loop();
+  } 
   // shutdown
   Aws::ShutdownAPI(options);
   
