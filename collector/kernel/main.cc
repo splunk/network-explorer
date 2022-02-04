@@ -640,7 +640,6 @@ int main(int argc, char *argv[])
             .force_docker_metadata = *force_docker_metadata,
             .dump_docker_metadata = *dump_docker_metadata,
         },
-        nullptr,
         bpf_dump_file.Get(),
         host_info,
         *entrypoint_error};
