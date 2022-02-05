@@ -37,8 +37,6 @@
 #define TABLE_SIZE__STACK_TRACES 16384   // Number of stack traces to keep in the table
 #define TABLE_SIZE__NIC_INFO_TABLE 128   // Info per network interface
 
-#define CPU_MEM_IO_REPORT_PERIOD_NS (1 /*ns*/ * 1000 /*us*/ * 1000 /*ms*/ * 10 /*centisecond*/)
-
 #define WATERMARK_STACK_TRACES                                                                                                 \
   (TABLE_SIZE__STACK_TRACES - 256) // When to clear the table (unfortunately non-atomic, but that's a lot of stack traces...)
 
