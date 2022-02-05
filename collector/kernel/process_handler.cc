@@ -68,10 +68,7 @@ void ProcessHandler::on_new_process(std::chrono::nanoseconds timestamp, struct j
   weak_handle.set_cgroup(msg.cgroup);
 
   processes_[msg.pid] = {
-      .handle = weak_handle.to_handle(),
-      .by_pid = {},
-      .by_tgid = {},
-      .last_check = monotonic_clock::now()
+      .handle = weak_handle.to_handle()
 #ifdef DEBUG_TGID
           ,
       .timestamp = timestamp,

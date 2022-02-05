@@ -89,22 +89,11 @@ private:
 
   struct ThreadGroupData {
     flowmill::kernel_collector::handles::tracked_process handle;
-    absl::flat_hash_map<u32, PerPidData> by_pid;
-    PerTgidData by_tgid;
-    monotonic_clock::time_point last_check;
 #ifdef DEBUG_TGID
     std::chrono::nanoseconds timestamp;
     u64 cgroup;
     std::string command;
 #endif // DEBUG_TGID
-
-    monotonic_clock::duration check_interval()
-    {
-      auto const now = monotonic_clock::now();
-      auto const interval = now - last_check;
-      last_check = now;
-      return interval;
-    }
   };
 
   // rpc components
