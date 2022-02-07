@@ -312,6 +312,9 @@ int main(int argc, char *argv[])
   auto disable_http_metrics = parser.add_env_flag(
       "disable-http-metrics", "Disable collection of HTTP metrics", FLOWMILL_DISABLE_HTTP_METRICS_VAR, false);
 
+  // keeping "enable-http-metrics" around while we phase it out,
+  // so that older deployments won't break
+  // we're transitioning to opt-out (preferably always on)
   args::Flag enable_http_metrics_deprecated(
       *parser, "http_metrics", "Enable collection of HTTP metrics (deprecated)", {"enable-http-metrics"});
 
