@@ -59,34 +59,6 @@ public:
 #endif // DEBUG_TGID
 
 private:
-  struct PerPidData {
-
-    template <typename RHS> PerPidData &operator+=(RHS &&rhs) { return *this; }
-  };
-
-  struct PerTgidData {
-
-    std::chrono::nanoseconds timestamp = {};
-    bool pending() const { return static_cast<bool>(timestamp.count()); }
-
-    void reset() { timestamp = std::chrono::nanoseconds::zero(); }
-
-    void update(std::chrono::nanoseconds t, PerPidData &rhs, bool on_exit) { timestamp = t; }
-
-    template <typename T> static void update_field(T &field, data::CounterToRate<T> &rhs, bool on_exit)
-    {
-      field += rhs.commit_rate(!on_exit);
-    }
-
-    template <typename T> static void update_field(T &field, data::Gauge<T> &rhs, bool)
-    {
-      if (rhs.max() > field) {
-        field = rhs.max();
-      }
-      rhs.reset();
-    }
-  };
-
   struct ThreadGroupData {
     flowmill::kernel_collector::handles::tracked_process handle;
 #ifdef DEBUG_TGID
