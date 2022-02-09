@@ -248,7 +248,6 @@ void KernelCollector::polling_steady_state_slow(uv_timer_t *timer)
   if (disabled_) {
     return;
   }
-  /* push data to server */
   bpf_handler_->slow_poll();
   nic_poller_.poll();
 

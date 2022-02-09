@@ -32,7 +32,6 @@
 // Configuration
 #include "config.h"
 #include "render_bpf.h"
-  
 // Perf events
 BPF_PERF_OUTPUT(events);
 #include "flowmill/agent_internal/bpf.h"
@@ -503,10 +502,6 @@ int onret_get_pid_task(struct pt_regs *ctx)
   return 0;
 }
 
-int on_finish_task_switch(struct pt_regs *ctx, struct task_struct *prev)
-{
-  return 0;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////
 /* TCP SOCKETS */
