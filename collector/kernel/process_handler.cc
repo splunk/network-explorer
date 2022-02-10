@@ -31,7 +31,7 @@ ProcessHandler::ProcessHandler(
     : writer_(writer), collector_index_(collector_index), log_(log), memory_page_bytes_(memory_page_size().try_raise().value())
 {
   LOG::trace_in(
-      AgentLogKind::PID,
+      AgentLogKind::TRACKED_PROCESS,
       "ProcessHandler: memory_page_size={} clock_ticks_per_second={}",
       memory_page_bytes_,
       clock_ticks_per_second);
@@ -55,7 +55,7 @@ void ProcessHandler::on_new_process(std::chrono::nanoseconds timestamp, struct j
   if (processes_.find(msg.pid) != processes_.end()) {
     ++stats_.duplicate_tgid;
 #ifdef DEBUG_TGID
-    LOG::debug_in(AgentLogKind::PID, "DUPLICATE TGID {}!", msg);
+    LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "DUPLICATE TGID {}!", msg);
 #endif // DEBUG_TGID
   }
 
@@ -88,7 +88,7 @@ void ProcessHandler::on_process_end(std::chrono::nanoseconds timestamp, struct j
   } else {
     ++stats_.missing_tgid;
 #ifdef DEBUG_TGID
-    LOG::debug_in(AgentLogKind::PID, "MISSING TGID {}", msg);
+    LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "MISSING TGID {}", msg);
 #endif // DEBUG_TGID
   }
 }
@@ -102,7 +102,7 @@ void ProcessHandler::on_cgroup_move(std::chrono::nanoseconds timestamp, struct j
   } else {
     ++stats_.missing_tgid;
 #ifdef DEBUG_TGID
-    LOG::debug_in(AgentLogKind::PID, "MISSING TGID {}", msg);
+    LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "MISSING TGID {}", msg);
 #endif // DEBUG_TGID
   }
 }
@@ -116,7 +116,7 @@ void ProcessHandler::set_process_command(std::chrono::nanoseconds timestamp, str
   } else {
     ++stats_.missing_tgid;
 #ifdef DEBUG_TGID
-    LOG::debug_in(AgentLogKind::PID, "MISSING TGID {}", msg);
+    LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "MISSING TGID {}", msg);
 #endif // DEBUG_TGID
   }
 }
@@ -131,7 +131,7 @@ void ProcessHandler::pid_exit(std::chrono::nanoseconds timestamp, struct jb_agen
   } else {
     ++stats_.missing_tgid;
 #ifdef DEBUG_TGID
-    LOG::debug_in(AgentLogKind::PID, "MISSING TGID {}", msg);
+    LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "MISSING TGID {}", msg);
 #endif // DEBUG_TGID
   }
 }
@@ -153,6 +153,6 @@ void ProcessHandler::debug_tgid_dump()
     return dump.str();
   }();
 
-  LOG::debug_in(AgentLogKind::PID, "{}", str);
+  LOG::debug_in(AgentLogKind::TRACKED_PROCESS, "{}", str);
 }
 #endif // DEBUG_TGID
