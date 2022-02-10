@@ -24,7 +24,6 @@
 
 #define BPF_MAX_CPUS 128              // Maximum number of CPUs to support
 #define TABLE_SIZE__TGID_INFO MAX_PID // Task (TGID) information
-#define TABLE_SIZE__PID_INFO MAX_PID  // Thread (PID) information
 #define TABLE_SIZE__SEEN_INODES                                                                                                \
   70000 // XXX: Is this even necessary? could this tracking be done in userland with non-limited tables?
 #define TABLE_SIZE__TCP_OPEN_SOCKETS (256 * 1024) // Was 4096, but should be larger to accommodate high traffic systems
