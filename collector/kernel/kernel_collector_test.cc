@@ -159,7 +159,6 @@ protected:
         enable_userland_tcp,
         socket_stats_interval_sec,
         CgroupHandler::CgroupSettings{false, false},
-        nullptr,
         bpf_dump_file,
         host_info,
         EntrypointError::none);
