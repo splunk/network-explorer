@@ -76,7 +76,7 @@ public:
 
 private:
   // Sends following information:
-  //   agent verstion and any config labels.
+  //   agent version and any config labels.
   // TODO: Send agent type as well.
   void send_metadata_header();
   void start_heartbeat();
