@@ -37,14 +37,13 @@ std::error_code TestChannel::send(const u8 *data, int size)
       auto rpc = reinterpret_cast<jb_rpc const *>(data + sizeof(u64)); // + sizeof(u64) to skip past timestamp
       LOG::trace("TestChannel::send() rpc: rpc_id {} size {}", rpc->rpc_id, rpc->size);
 
-      char msg[size];
-      memcpy(msg, data, size);
+      binary_messages_.emplace_back(data, data + size);
 
       std::stringstream ss;
       llvm::LLVMContext llvm;
       json_converter::WireToJsonConverter<flowmill::ingest_metadata> converter(ss, llvm);
 
-      if (auto const handled = converter.process(msg, size); !handled) {
+      if (auto const handled = converter.process(reinterpret_cast<char const *>(data), size); !handled) {
         if (handled.error().value() == EAGAIN) {
           LOG::error("TestChannel::send() converter.process() returned EAGAIN");
         } else {
@@ -137,9 +136,23 @@ TestChannel::MessageCountsType &TestChannel::get_message_counts()
   return message_counts_;
 }
 
+void TestChannel::binary_messages_for_each(std::function<void(BinaryMessageType const &)> cb)
+{
+  for (auto const &msg : binary_messages_) {
+    cb(msg);
+  }
+}
+
 TestChannel::JsonMessagesType &TestChannel::get_json_messages()
 {
   return json_messages_;
+}
+
+void TestChannel::json_messages_for_each(std::function<void(JsonMessageType const &)> cb)
+{
+  for (auto const &msg : json_messages_) {
+    cb(msg);
+  }
 }
 
 void TestChannel::connect(Callbacks &callbacks)
@@ -155,6 +168,22 @@ void TestChannel::connect(Callbacks &callbacks)
     LOG::trace("successfully scheduled fake_connected_cb() {} second(s) from now", delay_sec);
   } else {
     throw std::runtime_error("failed to schedule fake_connected_cb()");
+  }
+}
+
+void TestChannel::print_message_counts()
+{
+  LOG::debug("message_counts:");
+  for (auto const &name_and_count : message_counts_) {
+    LOG::debug("message_counts[\"{}\"] = {}", name_and_count.first, name_and_count.second);
+  }
+}
+
+void TestChannel::print_json_messages()
+{
+  LOG::trace("json_messages:");
+  for (auto const &object : json_messages_) {
+    LOG::trace("{}", log_waive(object.dump()));
   }
 }
 
