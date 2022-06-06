@@ -868,10 +868,6 @@ app ingest {
       4: string blob // the contents of the blob
     }
 
-    98: log report_cpu_cores {
-      1: u32 cpu_core_count
-    }
-
     99: log bpf_log {
       description "reports health status about collectors"
       severity 0
