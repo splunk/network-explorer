@@ -368,7 +368,6 @@ void KernelCollector::send_connection_metadata()
   writer_.os_info(
       integer_value(host_info_.os), host_info_.os_flavor, jb_blob{host_info_.os_version}, jb_blob{host_info_.kernel_version});
 
-  
   writer_.kernel_headers_source(integer_value(host_info_.kernel_headers_source));
 
   if (entrypoint_error_ != EntrypointError::none) {
