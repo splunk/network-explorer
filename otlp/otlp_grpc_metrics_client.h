@@ -18,10 +18,10 @@
 
 #include <config.h>
 
+#include <platform/types.h>
+
 #include <grpcpp/grpcpp.h>
 #include <opentelemetry/proto/collector/metrics/v1/metrics_service.grpc.pb.h>
-
-#include <platform/types.h>
 
 #include <unordered_map>
 
