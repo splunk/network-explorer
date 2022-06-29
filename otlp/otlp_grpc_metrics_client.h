@@ -23,8 +23,6 @@
 
 #include <platform/types.h>
 
-#include <mutex>
-#include <thread>
 #include <unordered_map>
 
 using opentelemetry::proto::collector::metrics::v1::ExportMetricsServiceRequest;
