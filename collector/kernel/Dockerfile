@@ -27,6 +27,8 @@ RUN if [ "$BUILD_TYPE" = "Debug" ]; then \
       apt-get -y install --no-install-recommends cgdb gdb valgrind; \
     fi
 
+RUN apt-get install -y selinux-utils checkpolicy semodule-utils policycoreutils
+
 COPY srv /srv
 WORKDIR /srv
 RUN if [ ! -e /srv/kernel-collector ]; then \

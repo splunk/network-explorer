@@ -237,6 +237,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     FILES
       ../../NOTICE.txt
       ../../LICENSE.txt
+      ./selinux_bpf.sh
     DEPENDENCY_OF
       collectors
     ARGS
@@ -254,6 +255,7 @@ else()
     FILES
       ../../NOTICE.txt
       ../../LICENSE.txt
+      ./selinux_bpf.sh
     DEPENDENCY_OF
       collectors
   )

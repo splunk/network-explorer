@@ -61,6 +61,9 @@ if [[ -n "${entrypoint_error}" ]]; then
   fi
 fi
 
+# If SELinux is enabled allow required bpf operations.
+./selinux_bpf.sh || true
+
 echo "launching kernel collector..."
 # on Debug (non-production) images, devs can run in local mode by setting
 # `EBPF_NET_RUN_LOCAL` to non-empty.
